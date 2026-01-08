@@ -199,6 +199,8 @@ npm run migration:run
 
 Después de crear/actualizar tickets y agregar comentarios, valida que se inserten filas:
 
+> Si quieres una verificación “copiar/pegar”, usa el script: [../scripts/verify_audit.sql](../scripts/verify_audit.sql)
+
 ```sql
 SELECT *
 FROM historial_actividad
@@ -216,5 +218,94 @@ Si quieres inspeccionar triggers instalados:
 ```sql
 SHOW TRIGGERS LIKE 'tickets';
 SHOW TRIGGERS LIKE 'comentarios';
+```
+
+## Checklist ejecutable (MySQL real)
+
+### 0) Prerrequisitos
+
+- MySQL/MariaDB levantado (XAMPP sirve)
+- Base creada: `ticketing_system`
+
+### 1) Aplicar DDL (tablas)
+
+El DDL es la fuente de verdad:
+
+- [../database/ddl_gestion_tickets.sql](../database/ddl_gestion_tickets.sql)
+
+Aplica el script en tu cliente (phpMyAdmin o CLI). En CLI, un ejemplo típico:
+
+```bash
+mysql -u root -p ticketing_system < database/ddl_gestion_tickets.sql
+```
+
+### 2) Configurar el proyecto para MySQL
+
+Usa `.env` basado en:
+
+- [../.env.example](../.env.example)
+
+O exporta variables en PowerShell:
+
+```powershell
+$env:PERSISTENCE_DRIVER = "mysql"
+$env:DB_HOST = "localhost"
+$env:DB_PORT = "3306"
+$env:DB_USER = "root"
+$env:DB_PASSWORD = ""
+$env:DB_NAME = "ticketing_system"
+$env:JWT_SECRET = "dev_secret_change_me"
+```
+
+### 3) Ejecutar migraciones (triggers)
+
+```bash
+npm run migration:run
+```
+
+Para revertir:
+
+```bash
+npm run migration:revert
+```
+
+### 4) Ejecutar la API contra MySQL
+
+```bash
+npm run start:dev
+```
+
+### 5) Probar flujo mínimo vía API
+
+Usa Swagger (`/api/docs`) o llamadas HTTP.
+
+Flujo sugerido:
+
+1) Crear 2 usuarios (cliente + agente) y obtener token (login)
+2) Crear ticket como cliente
+3) Asignar ticket al agente (admin o agente según reglas)
+4) Cambiar estado (IN_PROGRESS, luego CLOSED)
+5) Crear comentario
+
+### 6) Verificar auditoría en DB
+
+Ejecuta:
+
+```sql
+SOURCE scripts/verify_audit.sql;
+```
+
+O copia/pega consultas:
+
+```sql
+SELECT id_ticket, accion, id_usuario, valor_anterior, valor_nuevo, fecha_evento
+FROM historial_actividad
+ORDER BY fecha_evento DESC
+LIMIT 50;
+
+SELECT tipo_evento, entidad, entidad_id, fecha_evento
+FROM eventos_dominio
+ORDER BY fecha_evento DESC
+LIMIT 50;
 ```
 
