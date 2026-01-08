@@ -5,10 +5,18 @@ import { UserOrmEntity } from '../entities/user.orm-entity';
 
 const ROLE_PRIORITY: UserRole[] = [UserRole.ADMIN, UserRole.AGENT, UserRole.CLIENT];
 
+function mapDbRoleToDomain(nombre: string): UserRole | null {
+  // DB (DDL) usa nombres en español; el dominio usa valores del enum UserRole.
+  if (Object.values(UserRole).includes(nombre as UserRole)) return nombre as UserRole;
+  if (nombre === 'AGENTE') return UserRole.AGENT;
+  if (nombre === 'CLIENTE') return UserRole.CLIENT;
+  return null;
+}
+
 function pickPrimaryRole(roles: RoleOrmEntity[] | undefined): UserRole {
   const names = (roles ?? [])
-    .map((r) => r.nombre)
-    .filter((v): v is UserRole => Object.values(UserRole).includes(v as UserRole));
+    .map((r) => mapDbRoleToDomain(r.nombre))
+    .filter((v): v is UserRole => Boolean(v));
 
   for (const preferred of ROLE_PRIORITY) {
     if (names.includes(preferred)) return preferred;

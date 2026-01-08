@@ -27,7 +27,21 @@ export class MysqlUserRepository implements IUserRepository {
     return row ? UserTypeOrmMapper.toDomain(row) : null;
   }
 
-  private async getOrCreateRole(nombre: UserRole): Promise<RoleOrmEntity> {
+  private mapDomainRoleToDbNombre(role: UserRole): string {
+    switch (role) {
+      case UserRole.ADMIN:
+        return 'ADMIN';
+      case UserRole.AGENT:
+        return 'AGENTE';
+      case UserRole.CLIENT:
+        return 'CLIENTE';
+      default:
+        return 'CLIENTE';
+    }
+  }
+
+  private async getOrCreateRole(role: UserRole): Promise<RoleOrmEntity> {
+    const nombre = this.mapDomainRoleToDbNombre(role);
     const existing = await this.roles.findOne({ where: { nombre } });
     if (existing) return existing;
 
