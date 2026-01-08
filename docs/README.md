@@ -8,6 +8,11 @@ Esta carpeta contiene la documentación funcional y técnica del proyecto.
 - [Base de datos y persistencia](database.md)
 - [Ejecución y desarrollo](running.md)
 
+## Archivos útiles en la raíz
+
+- Ejemplo de variables de entorno: [../.env.example](../.env.example)
+- DDL (fuente de verdad): [../database/ddl_gestion_tickets.sql](../database/ddl_gestion_tickets.sql)
+
 ## Convenciones
 
 - Los diagramas se escriben en **Mermaid** para que se rendericen en Markdown (GitHub, VS Code, etc.).

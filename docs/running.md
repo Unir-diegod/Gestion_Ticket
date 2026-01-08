@@ -38,6 +38,10 @@ $env:DB_NAME = "ticketing_system"
 $env:JWT_SECRET = "dev_secret_change_me"
 ```
 
+Ejemplo en archivo:
+
+- [../.env.example](../.env.example)
+
 ## Correr el proyecto
 
 - Dev:
@@ -69,6 +73,11 @@ npm run start:prod
 - Tests: `npm run test`
 
 ## Migraciones (MySQL)
+
+Orden recomendado:
+
+1) Aplicar el DDL (tablas): [../database/ddl_gestion_tickets.sql](../database/ddl_gestion_tickets.sql)
+2) Ejecutar migraciones TypeORM (triggers, etc.):
 
 - Ejecutar: `npm run migration:run`
 - Revertir: `npm run migration:revert`

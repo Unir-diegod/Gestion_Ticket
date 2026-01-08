@@ -152,6 +152,11 @@ Valores:
 
 ## Migraciones
 
+Este proyecto usa TypeORM **solo en infraestructura** para dos cosas:
+
+1) Mapear entidades/repositorios MySQL
+2) Ejecutar migraciones versionadas (principalmente triggers de auditoría)
+
 Los scripts TypeORM están en `package.json`:
 
 - `npm run migration:run`
@@ -162,7 +167,7 @@ El DataSource para CLI:
 
 - [src/infra/database/typeorm/typeorm.datasource.ts](../src/infra/database/typeorm/typeorm.datasource.ts)
 
-> Nota: el DDL actual crea tablas, pero los triggers de auditoría se documentan e implementan como migraciones versionadas (con rollback) para poder auditarlas y desplegarlas en CI/CD.
+> Nota: el **DDL** crea tablas. Las **migraciones TypeORM** se usan para cambios incrementales (por ejemplo, triggers) con rollback.
 
 ## Triggers (auditoría)
 
@@ -175,7 +180,41 @@ Objetivo (diseño):
 
 Estrategia recomendada:
 
-- Una migración `V1__baseline.sql` que aplique el DDL (o valide existencia) según tu pipeline.
-- Una migración `V2__triggers.sql` que cree triggers.
-- Un rollback `V2__triggers.down.sql` que haga `DROP TRIGGER IF EXISTS ...`.
+- Aplicar el DDL como “baseline” (manual o por pipeline): [../database/ddl_gestion_tickets.sql](../database/ddl_gestion_tickets.sql)
+- Ejecutar migraciones TypeORM del proyecto (crean/borran triggers):
+  - [../src/infra/database/typeorm/migrations/1700000000000-baseline-ddl.ts](../src/infra/database/typeorm/migrations/1700000000000-baseline-ddl.ts)
+  - [../src/infra/database/typeorm/migrations/1700000000100-audit-triggers.ts](../src/infra/database/typeorm/migrations/1700000000100-audit-triggers.ts)
+
+### Setup sugerido (MySQL/MariaDB)
+
+1) Crear la base `ticketing_system` y aplicar el DDL.
+2) Configurar `.env` (ver [../.env.example](../.env.example)) y usar `PERSISTENCE_DRIVER=mysql`.
+3) Ejecutar:
+
+```bash
+npm run migration:run
+```
+
+### Verificación rápida (auditoría)
+
+Después de crear/actualizar tickets y agregar comentarios, valida que se inserten filas:
+
+```sql
+SELECT *
+FROM historial_actividad
+ORDER BY fecha_evento DESC
+LIMIT 50;
+
+SELECT *
+FROM eventos_dominio
+ORDER BY fecha_evento DESC
+LIMIT 50;
+```
+
+Si quieres inspeccionar triggers instalados:
+
+```sql
+SHOW TRIGGERS LIKE 'tickets';
+SHOW TRIGGERS LIKE 'comentarios';
+```
 
