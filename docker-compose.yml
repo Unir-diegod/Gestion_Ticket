@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ticket_db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: ticketing_system
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/ddl_gestion_tickets.sql:/docker-entrypoint-initdb.d/1_ddl.sql
+      - ./database/2_seed_admin.sql:/docker-entrypoint-initdb.d/2_seed_admin.sql
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  mysql_data:
